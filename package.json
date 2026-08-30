@@ -1,0 +1,25 @@
+{
+  "name": "ghost-fx",
+  "version": "1.0.0-beta.1",
+  "description": "High-performance HTTP request and browser session toolkit for Node.js",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node test/ghost.test.js"
+  },
+  "keywords": [
+    "http",
+    "requests",
+    "browser",
+    "automation",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "ghost": "src/cli/index.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0"
+  }
+}

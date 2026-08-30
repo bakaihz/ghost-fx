@@ -1,0 +1,46 @@
+[
+  {
+    "id": "session-1788125988281",
+    "url": "https://example.com",
+    "headers": {
+      "User-Agent": "GhostFX/1.0"
+    },
+    "cookies": [],
+    "history": []
+  },
+  {
+    "id": "session-1788126073944",
+    "url": "https://example.com",
+    "headers": {
+      "User-Agent": "GhostFX/1.0"
+    },
+    "cookies": [
+      [
+        "ghost",
+        "active"
+      ]
+    ],
+    "history": [
+      {
+        "url": "https://example.com",
+        "status": 200,
+        "timestamp": "2026-08-30T21:45:08.687Z"
+      }
+    ]
+  },
+  {
+    "id": "test-session",
+    "url": null,
+    "headers": {
+      "User-Agent": "GhostFX/1.0",
+      "X-Ghost-Test": "true"
+    },
+    "cookies": [
+      [
+        "ghost",
+        "active"
+      ]
+    ],
+    "history": []
+  }
+]
