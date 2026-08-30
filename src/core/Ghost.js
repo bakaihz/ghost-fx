@@ -1,7 +1,7 @@
 class Ghost {
   constructor(options = {}) {
     this.name = 'Ghost FX';
-    this.version = '1.0.0';
+    this.version = '1.0.0-beta.2';
     this.options = options;
   }
 
