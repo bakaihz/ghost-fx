@@ -1,123 +1,125 @@
 #!/usr/bin/env node
 
-const {
-  ProjectManager,
-  RequestOptimizer,
-  Browser
-} = require('../');
+const { Ghost } = require('../index');
 
-const command = process.argv[2];
-const project = new ProjectManager();
-const client = new RequestOptimizer();
-const browser = new Browser();
+const ghost = new Ghost();
 
-async function request() {
-  const method = (process.argv[3] || '').toUpperCase();
-  const url = process.argv[4];
+const [, , command, ...args] = process.argv;
 
-  if (!method || !url) throw new Error('Uso: ghost request <METHOD> <URL>');
-
-  const response = await client.request(url, { method });
-
-  console.log(`Status: ${response.status}`);
-  console.log(`Tempo: ${response.time} ms\n`);
-  console.log(JSON.stringify(response.data, null, 2));
-}
-
-async function browserCommand() {
-  const action = process.argv[3];
-
-  if (action === 'open') {
-    const session = await browser.createSession();
-    console.log(`Session: ${session.id}`);
-    return;
-  }
-
-  if (action === 'visit') {
-    const id = process.argv[4];
-    const url = process.argv[5];
-
-    if (!id || !url) {
-      throw new Error('Uso: ghost browser visit <session> <url>');
-    }
-
-    const page = await browser.navigate(id, url);
-
-    console.log(`Status: ${page.status}`);
-    console.log(`URL: ${page.url}`);
-    console.log(`Title: ${page.title}`);
-    console.log(`Links: ${page.links.length}`);
-    return;
-  }
-
-  if (action === 'close') {
-    const id = process.argv[4];
-
-    if (!id) throw new Error('Informe a sessão.');
-
-    console.log(
-      browser.closeSession(id)
-        ? 'Session closed'
-        : 'Session not found'
-    );
-    return;
-  }
-
+function help() {
   console.log(`
-Browser:
-  ghost browser open
-  ghost browser visit <session> <url>
-  ghost browser close <session>
+Ghost FX CLI
+
+Comandos:
+
+  ghost info
+  ghost get <url>
+  ghost scrape <url>
+  ghost title <url>
+  ghost links <url>
+  ghost metrics
+  ghost queue
+  ghost config
+  ghost process list
+
+Exemplos:
+
+  ghost get https://example.com
+  ghost scrape https://example.com
+  ghost title https://example.com
 `);
 }
 
 async function main() {
   switch (command) {
-    case 'request':
-      await request();
+    case 'info':
+      console.log(ghost.info());
       break;
 
-    case 'browser':
-      await browserCommand();
-      break;
+    case 'get': {
+      if (!args[0]) {
+        throw new Error('URL is required');
+      }
 
-    case 'ls':
+      const result = await ghost.get(args[0]);
+
+      console.log({
+        status: result.status,
+        headers: result.headers,
+        data: result.data
+      });
+
+      break;
+    }
+
+    case 'scrape': {
+      if (!args[0]) {
+        throw new Error('URL is required');
+      }
+
+      const result =
+        await ghost.scraper.scrape(args[0]);
+
+      console.log({
+        url: result.url,
+        status: result.status,
+        title: result.title,
+        links: result.links
+      });
+
+      break;
+    }
+
+    case 'title': {
+      if (!args[0]) {
+        throw new Error('URL is required');
+      }
+
       console.log(
-        (await project.list(process.argv[3] || '.'))
-          .map(x => x.name)
-          .join('\n')
+        await ghost.scraper.title(args[0])
       );
+
+      break;
+    }
+
+    case 'links': {
+      if (!args[0]) {
+        throw new Error('URL is required');
+      }
+
+      console.log(
+        await ghost.scraper.links(args[0])
+      );
+
+      break;
+    }
+
+    case 'metrics':
+      console.log(ghost.metrics());
       break;
 
-    case 'read':
-      console.log(await project.read(process.argv[3]));
+    case 'queue':
+      console.log(ghost.queue.stats());
       break;
 
-    case 'mkdir':
-      await project.mkdir(process.argv[3]);
+    case 'config':
+      console.log(ghost.config.get());
       break;
 
-    case 'exists':
-      console.log(await project.exists(process.argv[3]));
+    case 'process':
+      if (args[0] === 'list') {
+        console.log(ghost.process.list());
+      } else {
+        console.log('Usage: ghost process list');
+      }
       break;
 
     default:
-      console.log(`
-Ghost FX
-
-  ghost request <METHOD> <URL>
-  ghost browser open
-  ghost browser visit <session> <url>
-  ghost browser close <session>
-  ghost ls
-  ghost read <file>
-  ghost mkdir <directory>
-  ghost exists <path>
-`);
+      help();
   }
 }
 
 main().catch(error => {
   console.error(`Ghost FX Error: ${error.message}`);
-  process.exit(1);
+  process.exitCode = 1;
 });
