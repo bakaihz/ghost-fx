@@ -3,30 +3,31 @@
 const { Ghost } = require('../index');
 
 const ghost = new Ghost();
-
 const [, , command, ...args] = process.argv;
 
 function help() {
   console.log(`
 Ghost FX CLI
 
-Comandos:
-
+HTTP:
   ghost info
   ghost get <url>
+
+Scraper:
   ghost scrape <url>
   ghost title <url>
   ghost links <url>
+
+Process Manager:
+  ghost process list
+  ghost process start <name> <command> [args...]
+  ghost process stop <name>
+  ghost process restart <name>
+
+System:
   ghost metrics
   ghost queue
   ghost config
-  ghost process list
-
-Exemplos:
-
-  ghost get https://example.com
-  ghost scrape https://example.com
-  ghost title https://example.com
 `);
 }
 
@@ -37,9 +38,7 @@ async function main() {
       break;
 
     case 'get': {
-      if (!args[0]) {
-        throw new Error('URL is required');
-      }
+      if (!args[0]) throw new Error('URL is required');
 
       const result = await ghost.get(args[0]);
 
@@ -53,9 +52,7 @@ async function main() {
     }
 
     case 'scrape': {
-      if (!args[0]) {
-        throw new Error('URL is required');
-      }
+      if (!args[0]) throw new Error('URL is required');
 
       const result =
         await ghost.scraper.scrape(args[0]);
@@ -71,9 +68,7 @@ async function main() {
     }
 
     case 'title': {
-      if (!args[0]) {
-        throw new Error('URL is required');
-      }
+      if (!args[0]) throw new Error('URL is required');
 
       console.log(
         await ghost.scraper.title(args[0])
@@ -83,9 +78,7 @@ async function main() {
     }
 
     case 'links': {
-      if (!args[0]) {
-        throw new Error('URL is required');
-      }
+      if (!args[0]) throw new Error('URL is required');
 
       console.log(
         await ghost.scraper.links(args[0])
@@ -106,13 +99,62 @@ async function main() {
       console.log(ghost.config.get());
       break;
 
-    case 'process':
-      if (args[0] === 'list') {
-        console.log(ghost.process.list());
-      } else {
-        console.log('Usage: ghost process list');
+    case 'process': {
+      const action = args[0];
+      const name = args[1];
+
+      if (action === 'list') {
+        ghost.process.table();
+        break;
       }
-      break;
+
+      if (action === 'start') {
+        if (!name) {
+          throw new Error('Process name is required');
+        }
+
+        const command = args[2];
+
+        if (!command) {
+          throw new Error('Command is required');
+        }
+
+        const commandArgs = args.slice(3);
+
+        ghost.process.start(
+          name,
+          command,
+          commandArgs
+        );
+
+        ghost.process.table();
+        break;
+      }
+
+      if (action === 'stop') {
+        if (!name) {
+          throw new Error('Process name is required');
+        }
+
+        ghost.process.stop(name);
+        ghost.process.table();
+        break;
+      }
+
+      if (action === 'restart') {
+        if (!name) {
+          throw new Error('Process name is required');
+        }
+
+        await ghost.process.restart(name);
+        ghost.process.table();
+        break;
+      }
+
+      throw new Error(
+        'Usage: ghost process <list|start|stop|restart>'
+      );
+    }
 
     default:
       help();
